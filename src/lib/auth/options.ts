@@ -19,9 +19,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  jwt: {
-    maxAge: 15 * 60, // 15 minutes
-  },
   callbacks: {
     async signIn({ user, account }) {
       if (!account || account.provider !== "github") return false;
