@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  githubId  BigInt   @unique @map("github_id")
+  login     String   @db.VarChar(255)
+  name      String?  @db.VarChar(255)
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  memberships  OrgMembership[]
+  repositories Repository[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  githubId     BigInt    @unique @map("github_id")
+  login        String    @db.VarChar(255)
+  email        String?   @db.VarChar(255)
+  avatarUrl    String?   @map("avatar_url")
+  accessToken  String?   @map("access_token")
+  tokenExpires DateTime? @map("token_expires") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  memberships  OrgMembership[]
+  pullRequests PullRequest[]
+  reviews      PrReview[]
+
+  @@map("users")
+}
+
+model OrgMembership {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  role           String       @default("member") @db.VarChar(20)
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("org_memberships")
+}
+
+model Repository {
+  id             String    @id @default(uuid()) @db.Uuid
+  githubId       BigInt    @unique @map("github_id")
+  organizationId String    @map("organization_id") @db.Uuid
+  fullName       String    @map("full_name") @db.VarChar(255)
+  name           String    @db.VarChar(255)
+  private        Boolean   @default(false)
+  webhookId      BigInt?   @map("webhook_id")
+  lastSyncedAt   DateTime? @map("last_synced_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pullRequests PullRequest[]
+  sprints      Sprint[]
+  dailyMetrics DailyMetric[]
+
+  @@map("repositories")
+}
+
+model PullRequest {
+  id            String    @id @default(uuid()) @db.Uuid
+  githubId      BigInt    @map("github_id")
+  repositoryId  String    @map("repository_id") @db.Uuid
+  number        Int
+  title         String?
+  authorLogin   String?   @map("author_login") @db.VarChar(255)
+  authorId      String?   @map("author_id") @db.Uuid
+  state         String?   @db.VarChar(20)
+  draft         Boolean   @default(false)
+  openedAt      DateTime? @map("opened_at") @db.Timestamptz
+  closedAt      DateTime? @map("closed_at") @db.Timestamptz
+  mergedAt      DateTime? @map("merged_at") @db.Timestamptz
+  firstReviewAt DateTime? @map("first_review_at") @db.Timestamptz
+  linesAdded    Int       @default(0) @map("lines_added")
+  linesRemoved  Int       @default(0) @map("lines_removed")
+  reviewCount   Int       @default(0) @map("review_count")
+  cycleTimeHrs  Float?    @map("cycle_time_hrs")
+  reviewTimeHrs Float?    @map("review_time_hrs")
+  labels        Json      @default("[]")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  repository  Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  author      User?        @relation(fields: [authorId], references: [id])
+  reviews     PrReview[]
+  sprintItems SprintItem[]
+
+  @@unique([repositoryId, number])
+  @@index([repositoryId, mergedAt], map: "idx_prs_repo_merged")
+  @@index([authorLogin, repositoryId], map: "idx_prs_author")
+  @@map("pull_requests")
+}
+
+model PrReview {
+  id            String    @id @default(uuid()) @db.Uuid
+  pullRequestId String    @map("pull_request_id") @db.Uuid
+  reviewerLogin String?   @map("reviewer_login") @db.VarChar(255)
+  reviewerId    String?   @map("reviewer_id") @db.Uuid
+  state         String?   @db.VarChar(30)
+  submittedAt   DateTime? @map("submitted_at") @db.Timestamptz
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  reviewer    User?       @relation(fields: [reviewerId], references: [id])
+
+  @@index([pullRequestId], map: "idx_pr_reviews_pr")
+  @@map("pr_reviews")
+}
+
+model Sprint {
+  id           String   @id @default(uuid()) @db.Uuid
+  repositoryId String   @map("repository_id") @db.Uuid
+  name         String?  @db.VarChar(255)
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime @map("end_date") @db.Date
+  status       String   @default("active") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  repository Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  items      SprintItem[]
+
+  @@map("sprints")
+}
+
+model SprintItem {
+  id            String    @id @default(uuid()) @db.Uuid
+  sprintId      String    @map("sprint_id") @db.Uuid
+  pullRequestId String?   @map("pull_request_id") @db.Uuid
+  storyPoints   Float?    @map("story_points")
+  completed     Boolean   @default(false)
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+
+  sprint      Sprint       @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  pullRequest PullRequest? @relation(fields: [pullRequestId], references: [id])
+
+  @@map("sprint_items")
+}
+
+model DailyMetric {
+  id           String   @id @default(uuid()) @db.Uuid
+  repositoryId String   @map("repository_id") @db.Uuid
+  date         DateTime @db.Date
+  prsOpened    Int      @default(0) @map("prs_opened")
+  prsMerged    Int      @default(0) @map("prs_merged")
+  avgCycleTime Float?   @map("avg_cycle_time")
+  avgReviewTime Float?  @map("avg_review_time")
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, date])
+  @@index([repositoryId, date], map: "idx_daily_metrics")
+  @@map("daily_metrics")
+}
