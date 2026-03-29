@@ -20,9 +20,9 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "PR Metrics", href: "/dashboard/pr-metrics", icon: GitPullRequest },
   { label: "Code Review", href: "/dashboard/code-review", icon: Clock },
-  { label: "Team Velocity", href: "/dashboard/team-velocity", icon: TrendingUp },
-  { label: "Sprint Burndown", href: "/dashboard/sprint-burndown", icon: Flame },
-  { label: "Team Members", href: "/dashboard/team-members", icon: Users },
+  { label: "Team Velocity", href: "/dashboard/velocity", icon: TrendingUp },
+  { label: "Sprint Burndown", href: "/dashboard/burndown", icon: Flame },
+  { label: "Team Members", href: "/dashboard/team", icon: Users },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ] as const;
 

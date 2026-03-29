@@ -15,7 +15,7 @@ const MOBILE_NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "PRs", href: "/dashboard/pr-metrics", icon: GitPullRequest },
   { label: "Review", href: "/dashboard/code-review", icon: Clock },
-  { label: "Velocity", href: "/dashboard/team-velocity", icon: TrendingUp },
+  { label: "Velocity", href: "/dashboard/velocity", icon: TrendingUp },
   { label: "More", href: "/dashboard/settings", icon: MoreHorizontal },
 ] as const;
 

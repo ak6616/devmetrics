@@ -14,9 +14,9 @@ function getPageTitle(pathname: string): string {
     "/dashboard": "Dashboard",
     "/dashboard/pr-metrics": "PR Metrics",
     "/dashboard/code-review": "Code Review",
-    "/dashboard/team-velocity": "Team Velocity",
-    "/dashboard/sprint-burndown": "Sprint Burndown",
-    "/dashboard/team-members": "Team Members",
+    "/dashboard/velocity": "Team Velocity",
+    "/dashboard/burndown": "Sprint Burndown",
+    "/dashboard/team": "Team Members",
     "/dashboard/settings": "Settings",
   };
   return map[pathname] ?? "DevMetrics";
