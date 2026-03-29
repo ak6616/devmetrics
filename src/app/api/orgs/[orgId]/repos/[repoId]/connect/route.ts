@@ -82,7 +82,9 @@ export async function DELETE(
   );
   if (!membership || membership.role !== "admin") return forbidden();
 
-  const repo = await prisma.repository.findUnique({ where: { id: params.repoId } });
+  const repo = await prisma.repository.findFirst({
+    where: { name: params.repoId, organizationId: params.orgId },
+  });
   if (!repo) {
     return NextResponse.json({ error: "Repository not found" }, { status: 404 });
   }
