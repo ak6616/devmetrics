@@ -166,13 +166,30 @@ export async function getContributorMetrics(repoId: string, range: DateRange) {
   return result;
 }
 
+export class InvalidDateRangeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidDateRangeError";
+  }
+}
+
 export function parseDateRange(searchParams: URLSearchParams): DateRange {
   const now = new Date();
-  const start = searchParams.get("start")
-    ? new Date(searchParams.get("start")!)
+
+  const startParam = searchParams.get("start");
+  const endParam = searchParams.get("end");
+
+  const start = startParam
+    ? new Date(startParam)
     : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const end = searchParams.get("end")
-    ? new Date(searchParams.get("end")!)
-    : now;
+  const end = endParam ? new Date(endParam) : now;
+
+  if (isNaN(start.getTime())) {
+    throw new InvalidDateRangeError(`Invalid start date: "${startParam}"`);
+  }
+  if (isNaN(end.getTime())) {
+    throw new InvalidDateRangeError(`Invalid end date: "${endParam}"`);
+  }
+
   return { start, end };
 }
