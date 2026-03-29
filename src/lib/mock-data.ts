@@ -1,5 +1,15 @@
 // Mock data for DevMetrics dashboard
 
+// Deterministic seeded PRNG (LCG) — avoids SSR/client hydration mismatch from Math.random()
+function makeSeededRandom(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = Math.imul(s, 1664525) + 1013904223;
+    s = s >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
 export const kpiData = {
   totalPRsMerged: { value: 142, trend: 12.5, previousValue: 126 },
   avgReviewTime: { value: "4h 32m", trendMinutes: -18, trend: -6.2 },
@@ -7,21 +17,23 @@ export const kpiData = {
   openPRs: { value: 23, delta: -3 },
 };
 
+const _prRng = makeSeededRandom(42);
 export const prActivityData = Array.from({ length: 30 }, (_, i) => {
   const date = new Date(2026, 2, i + 1);
   return {
     date: date.toISOString().slice(0, 10),
-    opened: Math.floor(Math.random() * 8) + 2,
-    merged: Math.floor(Math.random() * 7) + 1,
-    rejected: Math.floor(Math.random() * 2),
+    opened: Math.floor(_prRng() * 8) + 2,
+    merged: Math.floor(_prRng() * 7) + 1,
+    rejected: Math.floor(_prRng() * 2),
   };
 });
 
+const _reviewRng = makeSeededRandom(137);
 export const reviewTimeTrendData = Array.from({ length: 30 }, (_, i) => {
   const date = new Date(2026, 2, i + 1);
   return {
     date: date.toISOString().slice(0, 10),
-    avgHours: parseFloat((Math.random() * 6 + 2).toFixed(1)),
+    avgHours: parseFloat((_reviewRng() * 6 + 2).toFixed(1)),
     target: 6,
   };
 });
@@ -45,10 +57,11 @@ export const prSizeDistribution = [
   { name: "XL (>1k)", value: 9, fill: "hsl(var(--chart-5))" },
 ];
 
+const _heatmapRng = makeSeededRandom(256);
 export const heatmapData = Array.from({ length: 52 * 7 }, (_, i) => ({
   week: Math.floor(i / 7),
   day: i % 7,
-  count: Math.floor(Math.random() * 8),
+  count: Math.floor(_heatmapRng() * 8),
 }));
 
 export const recentActivity = [
@@ -75,9 +88,10 @@ export const reviewByMember = [
   { name: "Morgan Lee", avgTime: "2h 50m", reviewed: 31, fastest: "15m", slowest: "20h", pending: 2 },
 ];
 
+const _slaRng = makeSeededRandom(512);
 export const slaComplianceData = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(2026, 2, i + 1).toISOString().slice(0, 10),
-  compliance: parseFloat((Math.random() * 30 + 65).toFixed(1)),
+  compliance: parseFloat((_slaRng() * 30 + 65).toFixed(1)),
   target: 80,
 }));
 
@@ -101,11 +115,12 @@ export const memberVelocity = [
   { sprint: "Sprint 23", "Sarah Chen": 10, "Alex Rivera": 8, "Jordan Kim": 7, "Taylor Swift": 6, "Morgan Lee": 8, "Casey Johnson": 6, "Riley Park": 4, "Jamie Woods": 3 },
 ];
 
+const _burndownRng = makeSeededRandom(999);
 export const burndownData = Array.from({ length: 10 }, (_, i) => ({
   day: `Day ${i + 1}`,
   ideal: 89 - (89 / 10) * (i + 1),
-  actual: i < 6 ? 89 - Math.floor(Math.random() * 5 + 6) * (i + 1) : 89 - 52 + Math.floor(Math.random() * 3) - (i - 5) * 5,
-  completed: Math.floor(Math.random() * 5 + 4),
+  actual: i < 6 ? 89 - Math.floor(_burndownRng() * 5 + 6) * (i + 1) : 89 - 52 + Math.floor(_burndownRng() * 3) - (i - 5) * 5,
+  completed: Math.floor(_burndownRng() * 5 + 4),
 }));
 
 export const scopeChanges = [
