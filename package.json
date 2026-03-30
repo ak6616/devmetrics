@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
@@ -50,6 +51,7 @@
   "devDependencies": {
     "dotenv": "^17.3.1",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.35"
+    "eslint-config-next": "^14.2.35",
+    "tsx": "^4.21.0"
   }
 }
