@@ -1,5 +1,9 @@
 export function DemoModeBanner() {
-  if (process.env.DEMO_MODE !== "true") return null;
+  const isDemo =
+    process.env.DEMO_MODE === "true" ||
+    process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+  if (!isDemo) return null;
 
   return (
     <div
