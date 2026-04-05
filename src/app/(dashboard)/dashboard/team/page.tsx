@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { teamMembers } from "@/lib/mock-data";
 import {
   Card,
@@ -14,6 +15,7 @@ import {
   Area,
   ResponsiveContainer,
 } from "recharts";
+import { ArrowRightLeft, Check } from "lucide-react";
 
 const roleConfig: Record<
   string,
@@ -49,6 +51,10 @@ const avatarColors = [
 ];
 
 export default function TeamPage() {
+  const [activeUserId, setActiveUserId] = useState<number>(1);
+
+  const activeUser = teamMembers.find((m) => m.id === activeUserId);
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -59,7 +65,15 @@ export default function TeamPage() {
             {teamMembers.length} members &middot; Current sprint performance
           </p>
         </div>
-        <Button size="sm">Invite Member</Button>
+        <div className="flex items-center gap-3">
+          {activeUser && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+              <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-medium text-primary">Viewing as: {activeUser.name}</span>
+            </div>
+          )}
+          <Button size="sm">Invite Member</Button>
+        </div>
       </div>
 
       {/* Member Grid */}
@@ -78,7 +92,9 @@ export default function TeamPage() {
           return (
             <Card
               key={member.id}
-              className="group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer"
+              className={`group transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${
+                activeUserId === member.id ? "ring-2 ring-primary/50 border-primary/30" : ""
+              }`}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start gap-3">
@@ -196,14 +212,37 @@ export default function TeamPage() {
                   </div>
                 </div>
 
-                {/* View Details */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs h-8 group-hover:border-primary group-hover:text-primary transition-colors"
-                >
-                  View Details
-                </Button>
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs h-8 group-hover:border-primary group-hover:text-primary transition-colors"
+                  >
+                    View Details
+                  </Button>
+                  <Button
+                    variant={activeUserId === member.id ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-8 gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveUserId(member.id);
+                    }}
+                  >
+                    {activeUserId === member.id ? (
+                      <>
+                        <Check className="h-3 w-3" />
+                        Active
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRightLeft className="h-3 w-3" />
+                        Switch
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
