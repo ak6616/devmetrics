@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -13,7 +13,9 @@ import {
   ReferenceLine,
 } from "recharts";
 
-import { burndownData, scopeChanges } from "@/lib/mock-data";
+import { burndownData } from "@/lib/mock-data";
+import { useFilters } from "@/lib/filters-context";
+import { selectBurndown } from "@/lib/filters";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -141,6 +143,8 @@ function StatRow({ label, value, sub }: { label: string; value: string | number;
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BurndownPage() {
+  const f = useFilters();
+  const { scopeChanges } = useMemo(() => selectBurndown(f), [f]);
   const [selectedSprint, setSelectedSprint] = useState("sprint-23");
 
   return (
