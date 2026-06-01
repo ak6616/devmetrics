@@ -1,6 +1,8 @@
 "use client";
 
-import { teamMembers } from "@/lib/mock-data";
+import { useMemo } from "react";
+import { useFilters } from "@/lib/filters-context";
+import { selectTeam } from "@/lib/filters";
 import {
   Card,
   CardContent,
@@ -49,6 +51,8 @@ const avatarColors = [
 ];
 
 export default function TeamPage() {
+  const f = useFilters();
+  const { teamMembers } = useMemo(() => selectTeam(f), [f]);
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
