@@ -30,11 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  prActivityData,
-  prSizeDistribution,
-  recentActivity,
-} from "@/lib/mock-data";
+import { useFilters } from "@/lib/filters-context";
+import { selectPrMetrics } from "@/lib/filters";
 
 // ── Additional inline mock data ──────────────────────────────────────────────
 
@@ -123,6 +120,12 @@ function downloadCSV(rows: typeof fullPRList) {
 // ── Page Component ────────────────────────────────────────────────────────────
 
 export default function PRMetricsPage() {
+  const f = useFilters();
+  const { prActivityData, prSizeDistribution } = useMemo(
+    () => selectPrMetrics(f),
+    [f]
+  );
+
   const [repo, setRepo] = useState("All Repos");
   const [author, setAuthor] = useState("All Authors");
   const [dateFrom, setDateFrom] = useState("2026-03-01");
