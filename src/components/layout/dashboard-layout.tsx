@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { MobileNav } from "./mobile-nav";
+import { FilterProvider } from "@/lib/filters-context";
 import { cn } from "@/lib/utils";
 
 /** Map pathnames to human-readable page titles */
@@ -72,6 +73,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pageTitle = getPageTitle(pathname);
 
   return (
+    <FilterProvider>
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop Sidebar — hidden on mobile, shown on md+ */}
       <div className="hidden md:flex flex-shrink-0">
@@ -135,5 +137,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Bottom Navigation */}
       <MobileNav />
     </div>
+    </FilterProvider>
   );
 }
