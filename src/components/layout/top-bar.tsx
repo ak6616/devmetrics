@@ -15,8 +15,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type DateRange = "7d" | "30d" | "90d" | "custom";
+import { useFilters, type Range } from "@/lib/filters-context";
+import { REPOS, MEMBERS } from "@/lib/filters";
 
 // ── Mock users for switching ────────────────────────────────────────────────
 const USERS = [
@@ -35,24 +35,15 @@ const NOTIFICATIONS = [
   { id: 5, type: "pr" as const, title: "PR #338 opened", body: "Morgan Lee opened Add dark mode support", time: "3h ago", read: true },
 ];
 
-const REPOS = ["All repos", "devmetrics/api", "devmetrics/web", "devmetrics/infra"];
-
 interface TopBarProps {
   title: string;
-  onDateRangeChange?: (range: DateRange) => void;
   onRefresh?: () => void;
   className?: string;
 }
 
-export function TopBar({
-  title,
-  onDateRangeChange,
-  onRefresh,
-  className,
-}: TopBarProps) {
-  const [activeRange, setActiveRange] = useState<DateRange>("30d");
+export function TopBar({ title, onRefresh, className }: TopBarProps) {
+  const { range, repo, member, setRange, setRepo, setMember } = useFilters();
   const [repoOpen, setRepoOpen] = useState(false);
-  const [selectedRepo, setSelectedRepo] = useState("All repos");
   const [teamOpen, setTeamOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -62,17 +53,11 @@ export function TopBar({
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const DATE_RANGES: { label: string; value: DateRange }[] = [
+  const DATE_RANGES: { label: string; value: Range }[] = [
     { label: "Last 7d", value: "7d" },
     { label: "Last 30d", value: "30d" },
     { label: "Last 90d", value: "90d" },
-    { label: "Custom", value: "custom" },
   ];
-
-  function handleDateRange(range: DateRange) {
-    setActiveRange(range);
-    onDateRangeChange?.(range);
-  }
 
   function handleRefresh() {
     setIsRefreshing(true);
@@ -90,11 +75,6 @@ export function TopBar({
   function handleSwitchUser(user: typeof USERS[0]) {
     setCurrentUser(user);
     setUserOpen(false);
-  }
-
-  function handleSelectRepo(repo: string) {
-    setSelectedRepo(repo);
-    setRepoOpen(false);
   }
 
   function markAllRead() {
@@ -117,6 +97,12 @@ export function TopBar({
     }
   }
 
+  const repoLabel = repo === "all" ? "All repos" : repo;
+  const memberLabel = member === "all" ? "All members" : member;
+
+  const repoOptions = [{ label: "All repos", value: "all" }, ...REPOS.map((r) => ({ label: r, value: r }))];
+  const memberOptions = [{ label: "All members", value: "all" }, ...MEMBERS.map((m) => ({ label: m, value: m }))];
+
   return (
     <header
       className={cn(
@@ -134,10 +120,10 @@ export function TopBar({
         {DATE_RANGES.map(({ label, value }) => (
           <button
             key={value}
-            onClick={() => handleDateRange(value)}
+            onClick={() => setRange(value)}
             className={cn(
               "px-2.5 py-1 rounded text-xs font-medium transition-colors duration-150",
-              activeRange === value
+              range === value
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
@@ -145,9 +131,16 @@ export function TopBar({
             {label}
           </button>
         ))}
+        <button
+          disabled
+          title="Coming soon"
+          className="px-2.5 py-1 rounded text-xs font-medium text-muted-foreground/40 cursor-not-allowed"
+        >
+          Custom
+        </button>
       </div>
 
-      {/* Repository Switcher */}
+      {/* Repository Filter */}
       <div className="relative hidden md:block">
         <button
           onClick={() => { setRepoOpen((o) => !o); setTeamOpen(false); setUserOpen(false); setNotifOpen(false); }}
@@ -157,24 +150,24 @@ export function TopBar({
             "hover:bg-muted transition-colors duration-150"
           )}
         >
-          <span>{selectedRepo}</span>
+          <span>{repoLabel}</span>
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </button>
         {repoOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={closeAll} />
             <div className="absolute right-0 mt-1 w-44 bg-popover border border-border rounded-md shadow-lg z-20 py-1">
-              {REPOS.map((repo) => (
+              {repoOptions.map((opt) => (
                 <button
-                  key={repo}
-                  onClick={() => handleSelectRepo(repo)}
+                  key={opt.value}
+                  onClick={() => { setRepo(opt.value); setRepoOpen(false); }}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-1.5 text-xs text-popover-foreground hover:bg-accent transition-colors",
-                    selectedRepo === repo && "font-semibold"
+                    repo === opt.value && "font-semibold"
                   )}
                 >
-                  {repo}
-                  {selectedRepo === repo && <Check className="h-3 w-3 text-primary" />}
+                  {opt.label}
+                  {repo === opt.value && <Check className="h-3 w-3 text-primary" />}
                 </button>
               ))}
             </div>
@@ -182,7 +175,7 @@ export function TopBar({
         )}
       </div>
 
-      {/* Team Filter */}
+      {/* Member Filter */}
       <div className="relative hidden md:block">
         <button
           onClick={() => { setTeamOpen((o) => !o); setRepoOpen(false); setUserOpen(false); setNotifOpen(false); }}
@@ -192,20 +185,24 @@ export function TopBar({
             "hover:bg-muted transition-colors duration-150"
           )}
         >
-          <span>All members</span>
+          <span>{memberLabel}</span>
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </button>
         {teamOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={closeAll} />
-            <div className="absolute right-0 mt-1 w-44 bg-popover border border-border rounded-md shadow-lg z-20 py-1">
-              {["All members", "Alice Chen", "Bob Kumar", "Carol Smith", "Dave Lee"].map((member) => (
+            <div className="absolute right-0 mt-1 w-44 bg-popover border border-border rounded-md shadow-lg z-20 py-1 max-h-72 overflow-y-auto">
+              {memberOptions.map((opt) => (
                 <button
-                  key={member}
-                  onClick={() => setTeamOpen(false)}
-                  className="w-full text-left px-3 py-1.5 text-xs text-popover-foreground hover:bg-accent transition-colors"
+                  key={opt.value}
+                  onClick={() => { setMember(opt.value); setTeamOpen(false); }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-1.5 text-xs text-popover-foreground hover:bg-accent transition-colors",
+                    member === opt.value && "font-semibold"
+                  )}
                 >
-                  {member}
+                  {opt.label}
+                  {member === opt.value && <Check className="h-3 w-3 text-primary" />}
                 </button>
               ))}
             </div>
@@ -223,9 +220,7 @@ export function TopBar({
           "transition-colors duration-150"
         )}
       >
-        <RefreshCw
-          className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-        />
+        <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
       </button>
 
       {/* Notification Bell with Modal */}
@@ -250,7 +245,6 @@ export function TopBar({
           <>
             <div className="fixed inset-0 z-10" onClick={closeAll} />
             <div className="absolute right-0 mt-1 w-80 bg-popover border border-border rounded-lg shadow-xl z-20 overflow-hidden">
-              {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <p className="text-sm font-semibold text-popover-foreground">Notifications</p>
                 <div className="flex items-center gap-2">
@@ -270,7 +264,6 @@ export function TopBar({
                   </button>
                 </div>
               </div>
-              {/* Notification List */}
               <div className="max-h-72 overflow-y-auto">
                 {notifications.map((notif) => (
                   <button
@@ -295,7 +288,6 @@ export function TopBar({
                   </button>
                 ))}
               </div>
-              {/* Footer */}
               <div className="px-4 py-2 border-t border-border">
                 <button className="w-full text-center text-xs text-primary hover:underline py-1">
                   View all notifications
@@ -325,12 +317,10 @@ export function TopBar({
           <>
             <div className="fixed inset-0 z-10" onClick={closeAll} />
             <div className="absolute right-0 mt-1 w-56 bg-popover border border-border rounded-md shadow-lg z-20 py-1">
-              {/* Current user info */}
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-xs font-medium text-popover-foreground">{currentUser.name}</p>
                 <p className="text-xs text-muted-foreground">{currentUser.email}</p>
               </div>
-              {/* User switcher */}
               <div className="border-b border-border py-1">
                 <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Switch account</p>
                 {USERS.filter((u) => u.id !== currentUser.id).map((user) => (
@@ -349,7 +339,6 @@ export function TopBar({
                   </button>
                 ))}
               </div>
-              {/* Menu items */}
               <button className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-popover-foreground hover:bg-accent transition-colors">
                 <User className="h-3.5 w-3.5" />
                 Profile

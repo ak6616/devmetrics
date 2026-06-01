@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  kpiData,
-  prActivityData,
-  reviewTimeTrendData,
-  topContributors,
-  prSizeDistribution,
-  heatmapData,
-  recentActivity,
-} from "@/lib/mock-data";
+import { useMemo } from "react";
+import { useFilters } from "@/lib/filters-context";
+import { selectDashboard } from "@/lib/filters";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -229,7 +223,11 @@ function PieTooltip({ active, payload }: any) {
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function ReviewHeatmap() {
+function ReviewHeatmap({
+  heatmapData,
+}: {
+  heatmapData: { week: number; day: number; count: number }[];
+}) {
   // Use last 20 weeks × 7 days = 140 data points
   const slice = heatmapData.slice(-140);
   const weeks = 20;
@@ -294,6 +292,19 @@ function StatusBadge({ status }: { status: "merged" | "open" | "draft" }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const f = useFilters();
+  const {
+    kpiData,
+    prActivityData,
+    reviewTimeTrendData,
+    topContributors,
+    prSizeDistribution,
+    heatmapData,
+    recentActivity,
+    rangeDays,
+  } = useMemo(() => selectDashboard(f), [f]);
+  const rangeDaysLabel = `${rangeDays} days`;
+
   const totalPRs = prSizeDistribution.reduce((s, d) => s + d.value, 0);
 
   // Thin out date labels for X-axis readability (every 5th label)
@@ -312,7 +323,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Overview of your team&apos;s development metrics — last 30 days
+          Overview of your team&apos;s development metrics — last {rangeDaysLabel}
         </p>
       </div>
 
@@ -526,7 +537,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Reviews submitted per day (last 20 weeks)</p>
           </CardHeader>
           <CardContent>
-            <ReviewHeatmap />
+            <ReviewHeatmap heatmapData={heatmapData} />
           </CardContent>
         </Card>
       </div>

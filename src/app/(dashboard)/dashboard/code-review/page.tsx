@@ -26,12 +26,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  codeReviewMetrics,
-  reviewByMember,
-  slaComplianceData,
-  reviewBottlenecks,
-} from "@/lib/mock-data";
+import { useMemo } from "react";
+import { useFilters } from "@/lib/filters-context";
+import { selectCodeReview } from "@/lib/filters";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,6 +89,9 @@ const stageBorderColors = {
 // ── Page Component ────────────────────────────────────────────────────────────
 
 export default function CodeReviewPage() {
+  const f = useFilters();
+  const { codeReviewMetrics, reviewByMember, slaComplianceData, reviewBottlenecks } =
+    useMemo(() => selectCodeReview(f), [f]);
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* ── Page Title ─────────────────────────────────────────────────── */}

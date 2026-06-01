@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { teamMembers } from "@/lib/mock-data";
+import { useState, useMemo } from "react";
+import { useFilters } from "@/lib/filters-context";
+import { selectTeam } from "@/lib/filters";
 import {
   Card,
   CardContent,
@@ -51,6 +52,8 @@ const avatarColors = [
 ];
 
 export default function TeamPage() {
+  const f = useFilters();
+  const { teamMembers } = useMemo(() => selectTeam(f), [f]);
   const [activeUserId, setActiveUserId] = useState<number>(1);
 
   const activeUser = teamMembers.find((m) => m.id === activeUserId);
