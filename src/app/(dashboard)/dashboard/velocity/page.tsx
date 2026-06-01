@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   ComposedChart,
@@ -16,7 +16,9 @@ import {
   BarChart,
 } from "recharts";
 
-import { velocityData, memberVelocity } from "@/lib/mock-data";
+import { velocityData } from "@/lib/mock-data";
+import { useFilters } from "@/lib/filters-context";
+import { selectVelocity } from "@/lib/filters";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -151,6 +153,8 @@ function MemberTooltip({ active, payload, label }: MemberTooltipProps) {
 }
 
 export default function VelocityPage() {
+  const f = useFilters();
+  const { memberVelocity } = useMemo(() => selectVelocity(f), [f]);
   const [sprintIndex, setSprintIndex] = useState(SPRINT_LABELS.length - 1);
   const currentSprintName = SPRINT_LABELS[sprintIndex];
   const meta = getSprintMeta(currentSprintName);
